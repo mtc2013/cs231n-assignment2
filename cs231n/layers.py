@@ -67,7 +67,7 @@ def affine_backward(dout, cache):
     dx = dout.dot(w.transpose()) #NXD
     dx = np.reshape(dx, x.shape)
     
-    db = np.sum(dout,axis=0,keepdims=True)
+    db = np.sum(dout,axis=0)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
