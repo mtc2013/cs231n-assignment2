@@ -195,6 +195,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         
         running_mean = momentum * running_mean + (1 - momentum) * sample_mean
         running_var = momentum * running_var + (1 - momentum) * sample_var
+        cache = (xhat,x_descaled, gamma, x_mean_difference,sample_sd, sample_var, eps)
+
         pass
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -218,7 +220,6 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         raise ValueError('Invalid forward batchnorm mode "%s"' % mode)
         
     #cache = (xhat,gamma,xmu,ivar,sqrtvar,var,eps)    
-    cache = (xhat,x_descaled, gamma, x_mean_difference,sample_sd, sample_var, eps)
 
     # Store the updated running means back into bn_param
     bn_param['running_mean'] = running_mean
@@ -251,39 +252,34 @@ def batchnorm_backward(dout, cache):
     # results in the dx, dgamma, and dbeta variables.                         #
     ###########################################################################
     
-    #dbeta = np.sum(dout,axis=0)
-    #dx_descaled = dout
-    #dgamma = np.sum(dx_descaled*xhat,axis=0)
-    #dxhat = dx_descaled * gamma
-    #inv_sample_sd = 1/sample_sd
+    dbeta = np.sum(dout,axis=0)
+    dx_descaled = dout
+    dgamma = np.sum(dx_descaled*xhat,axis=0)
+    dxhat = dx_descaled * gamma
+    inv_sample_sd = 1/sample_sd
     
     
-    #dinv_sample_sd = np.sum(dxhat*x_mean_difference,axis=0)
-    #dx_mean_difference = dxhat*inv_sample_sd
+    dinv_sample_sd = np.sum(dxhat*x_mean_difference,axis=0)
+    dx_mean_difference = dxhat*inv_sample_sd
     
-    #dsample_sd = dinv_sample_sd * -1/np.square(sample_sd)
+    dsample_sd = dinv_sample_sd * -1/np.square(sample_sd)
     
-    #dvar = .5*dsample_sd/np.sqrt(sample_var + eps)
+    dvar = .5*dsample_sd/np.sqrt(sample_var + eps)
     
-    #N,D = dout.shape
-    #dsq = 1/N * np.ones((N,D)) * dvar
+    N,D = dout.shape
+    dsq = 1/N * np.ones((N,D)) * dvar
     
-    #dx_mean_sq_difference = 2*x_mean_difference*dsq
+    dx_mean_sq_difference = 2*x_mean_difference*dsq
     
-    #dx_difference = dx_mean_difference + dx_mean_sq_difference 
+    dx_difference = dx_mean_difference + dx_mean_sq_difference 
     
-    #dx1 = dx_difference
+    dx1 = dx_difference
     
-    #du = -1 * np.sum(dx_mean_difference + dx_mean_sq_difference, axis=0)
+    du = -1 * np.sum(dx_mean_difference + dx_mean_sq_difference, axis=0)
     
-    #dx2 = 1 /N * np.ones((N,D)) * du
+    dx2 = 1 /N * np.ones((N,D)) * du
     
-    #dx = dx1+dx2
-    
-    
-
-  return out, cache
-        
+    dx = dx1+dx2        
 
     pass
     ###########################################################################
