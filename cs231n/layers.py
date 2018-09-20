@@ -167,6 +167,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
 
     out, cache = None, None
+    xhat,x_descaled = None, None
     if mode == 'train':
         #######################################################################
         # TODO: Implement the training-time forward pass for batch norm.      #
@@ -186,9 +187,11 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         
         sample_mean = np.mean(x,axis=0)
         sample_var = np.var(x,axis=0)
-        out = (x-sample_mean)/np.sqrt(sample_var)
-        out *= gamma
-        out += beta
+        sample_sd = np.sqrt(sample_var + eps)
+        x_mean_difference = x - sample_mean
+        xhat = x_mean_difference/np.sqrt(sample_sd)
+        x_descaled = xhat*gamma
+        out = x_descaled + beta
         
         running_mean = momentum * running_mean + (1 - momentum) * sample_mean
         running_var = momentum * running_var + (1 - momentum) * sample_var
@@ -204,15 +207,18 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # Store the result in the out variable.                               #
         #######################################################################
         
-        out = (x-running_mean)/np.sqrt(running_var)
-        out *= gamma
-        out += beta
+        xhat = (x-running_mean)/np.sqrt(running_var)
+        x_descaled = xhat * gamma
+        out = x_descaled + beta
         pass
         #######################################################################
         #                          END OF YOUR CODE                           #
         #######################################################################
     else:
         raise ValueError('Invalid forward batchnorm mode "%s"' % mode)
+        
+    #cache = (xhat,gamma,xmu,ivar,sqrtvar,var,eps)    
+    cache = (xhat,x_descaled, gamma, x_mean_difference,sample_sd, sample_var, eps)
 
     # Store the updated running means back into bn_param
     bn_param['running_mean'] = running_mean
@@ -239,10 +245,46 @@ def batchnorm_backward(dout, cache):
     - dbeta: Gradient with respect to shift parameter beta, of shape (D,)
     """
     dx, dgamma, dbeta = None, None, None
+    xhat, x_descaled, gamma,x_mean_difference,sample_sd,sample_var,eps = cache[0], cache[1], cache[2],cache[3],cache[4],cache[5],cache[6]
     ###########################################################################
     # TODO: Implement the backward pass for batch normalization. Store the    #
     # results in the dx, dgamma, and dbeta variables.                         #
     ###########################################################################
+    
+    #dbeta = np.sum(dout,axis=0)
+    #dx_descaled = dout
+    #dgamma = np.sum(dx_descaled*xhat,axis=0)
+    #dxhat = dx_descaled * gamma
+    #inv_sample_sd = 1/sample_sd
+    
+    
+    #dinv_sample_sd = np.sum(dxhat*x_mean_difference,axis=0)
+    #dx_mean_difference = dxhat*inv_sample_sd
+    
+    #dsample_sd = dinv_sample_sd * -1/np.square(sample_sd)
+    
+    #dvar = .5*dsample_sd/np.sqrt(sample_var + eps)
+    
+    #N,D = dout.shape
+    #dsq = 1/N * np.ones((N,D)) * dvar
+    
+    #dx_mean_sq_difference = 2*x_mean_difference*dsq
+    
+    #dx_difference = dx_mean_difference + dx_mean_sq_difference 
+    
+    #dx1 = dx_difference
+    
+    #du = -1 * np.sum(dx_mean_difference + dx_mean_sq_difference, axis=0)
+    
+    #dx2 = 1 /N * np.ones((N,D)) * du
+    
+    #dx = dx1+dx2
+    
+    
+
+  return out, cache
+        
+
     pass
     ###########################################################################
     #                             END OF YOUR CODE                            #
