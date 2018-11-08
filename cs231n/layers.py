@@ -185,11 +185,11 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # variables.                                                          #
         #######################################################################
         
-        sample_mean = np.mean(x,axis=0)
-        sample_var = np.var(x,axis=0)
-        sample_sd = np.sqrt(sample_var + eps)
+        sample_mean = 1./N * np.sum(x, axis = 0)
         x_mean_difference = x - sample_mean
-        xhat = x_mean_difference/np.sqrt(sample_sd)
+        sample_var = 1./N * np.sum(x_mean_difference**2, axis = 0)
+        sample_sd = np.sqrt(sample_var + eps)
+        xhat = x_mean_difference/np.sqrt(sample_var + eps)
         x_descaled = xhat*gamma
         out = x_descaled + beta
         
@@ -279,8 +279,8 @@ def batchnorm_backward(dout, cache):
     
     dx2 = 1 /N * np.ones((N,D)) * du
     
-    dx = dx1+dx2        
-
+    dx = dx1+dx2
+    
     pass
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -303,6 +303,8 @@ def batchnorm_backward_alt(dout, cache):
     Inputs / outputs: Same as batchnorm_backward
     """
     dx, dgamma, dbeta = None, None, None
+    m, xhat, x_descaled, gamma,x_mean_difference,sample_sd,sample_var,eps = dout.shape[0],cache[0], cache[1], cache[2],cache[3],cache[4],cache[5],cache[6]
+
     ###########################################################################
     # TODO: Implement the backward pass for batch normalization. Store the    #
     # results in the dx, dgamma, and dbeta variables.                         #
@@ -315,7 +317,13 @@ def batchnorm_backward_alt(dout, cache):
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-
+    dbeta = np.sum(dout,axis=0)
+    dgamma = np.sum(dout*xhat,axis=0)
+    
+    dxhat = dout * gamma
+    dsigma_squared = np.sum(dxhat*x_mean_difference*-0.5*np.power(sample_var+eps,-1.5),axis=0)
+    dmu = np.sum(dxhat*-np.power(sample_var + eps,-0.5),axis=0) + dsigma_squared*-2*np.sum(x_mean_difference,axis=0)/m
+    dx = dxhat*np.power(sample_var + eps,-0.5)+(2*x_mean_difference*dsigma_squared)/m + dmu/m
     return dx, dgamma, dbeta
 
 
